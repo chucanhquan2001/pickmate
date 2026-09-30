@@ -1,3 +1,13 @@
+FROM node:22-bookworm-slim AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
 FROM composer:2 AS vendor
 
 WORKDIR /app
@@ -26,6 +36,7 @@ RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
     && chmod +x /entrypoint.sh
 
 COPY --from=vendor /app /var/www/html
+COPY --from=assets /app/public/build /var/www/html/public/build
 
 WORKDIR /var/www/html
 
