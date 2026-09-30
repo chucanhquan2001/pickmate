@@ -48,7 +48,8 @@ function active(href) {
                 <p class="text-xs font-semibold uppercase tracking-wide text-teal-700">PickMate</p>
                 <p class="truncate text-sm text-stone-600">{{ current?.name || user?.name }}</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex shrink-0 items-center gap-1">
+                <Link href="/guide" class="rounded-full px-3 py-2 text-sm font-semibold text-teal-700">Hướng dẫn</Link>
                 <Link href="/settings" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Cài đặt</Link>
                 <Link href="/logout" method="post" as="button" class="rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-700">Thoát</Link>
             </div>

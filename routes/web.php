@@ -32,6 +32,7 @@ Route::post('/logout', [AuthController::class, 'destroy'])
 Route::middleware(['auth', 'club.active'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/guide', [DashboardController::class, 'guide'])->name('guide');
     Route::delete('/current-minigame', [DashboardController::class, 'clear'])->name('minigames.clear');
 
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');

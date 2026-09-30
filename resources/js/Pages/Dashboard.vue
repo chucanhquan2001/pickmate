@@ -20,6 +20,12 @@ function clearSelection() {
 <template>
     <Head title="Home" />
     <AppLayout>
+        <Link href="/guide" class="mb-4 block rounded-3xl bg-white p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-teal-700">Hướng dẫn</p>
+            <p class="mt-1 font-semibold">Tạo lịch đấu ở đâu?</p>
+            <p class="mt-1 text-sm text-stone-600">Nút + chỉ tạo trận khi minigame đang chạy. Xem từng bước.</p>
+        </Link>
+
         <section v-if="selected" class="space-y-4">
             <div class="flex items-start justify-between gap-3">
                 <div>

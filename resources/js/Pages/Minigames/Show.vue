@@ -41,6 +41,11 @@ function save() {
             <button v-if="minigame.status === 'draft'" type="button" class="min-h-12 rounded-2xl bg-teal-700 font-semibold text-white" @click="router.post(`/minigames/${minigame.id}/activate`)">Kích hoạt</button>
             <button v-if="minigame.status !== 'closed'" type="button" class="min-h-12 rounded-2xl border border-stone-300 bg-white font-semibold" @click="router.post(`/minigames/${minigame.id}/close`)">Đóng</button>
             <Link v-if="minigame.status === 'active'" :href="`/minigames/${minigame.id}/matches/create`" class="col-span-2 flex min-h-12 items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white">Tạo trận</Link>
+            <p v-else class="col-span-2 text-sm text-stone-600">
+                <template v-if="minigame.status === 'draft'">Bấm Kích hoạt rồi mới tạo được lịch. Nút + ở thanh dưới cũng chỉ tạo trận khi minigame đang chạy.</template>
+                <template v-else>Minigame đã đóng nên không tạo thêm trận.</template>
+                <Link href="/guide" class="font-semibold text-teal-700"> Hướng dẫn</Link>
+            </p>
         </div>
 
         <form v-if="page.props.auth.user.can_manage && minigame.status !== 'closed'" class="mt-6 space-y-3" @submit.prevent="save">

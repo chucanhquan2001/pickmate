@@ -2,7 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import StatusBadge from '../../Components/StatusBadge.vue';
-import { formatWhen, teamLabel } from '../../labels';
+import { formatWhen, label, minigameStatuses, teamLabel } from '../../labels';
 
 defineProps({
     minigame: { type: Object, required: true },
@@ -21,6 +21,16 @@ const page = usePage();
                 <p class="text-sm text-stone-500">{{ minigame.name }}</p>
             </div>
             <Link v-if="page.props.auth.user.can_manage && minigame.status === 'active'" :href="`/minigames/${minigame.id}/matches/create`" class="rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Tạo</Link>
+        </div>
+        <div v-if="!page.props.auth.user.can_manage" class="mt-4 rounded-3xl bg-white p-4 text-sm text-stone-600">
+            Chỉ Owner và Admin tạo được lịch đấu.
+            <Link href="/guide" class="font-semibold text-teal-700">Xem hướng dẫn</Link>
+        </div>
+        <div v-else-if="minigame.status !== 'active'" class="mt-4 rounded-3xl bg-white p-4 text-sm text-stone-600">
+            Minigame đang {{ label(minigameStatuses, minigame.status) }}. Nút Tạo chỉ hiện khi minigame đang chạy.
+            <Link :href="`/minigames/${minigame.id}`" class="font-semibold text-teal-700">Mở minigame</Link>
+            ·
+            <Link href="/guide" class="font-semibold text-teal-700">Hướng dẫn</Link>
         </div>
         <ul class="mt-4 space-y-2">
             <li v-for="match in matches.data" :key="match.id">

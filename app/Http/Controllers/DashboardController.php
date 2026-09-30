@@ -51,6 +51,11 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function guide(): Response
+    {
+        return Inertia::render('Guide');
+    }
+
     public function clear(Request $request, CurrentMinigame $current): RedirectResponse
     {
         $current->forget($request);
