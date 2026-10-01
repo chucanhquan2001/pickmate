@@ -36,7 +36,10 @@ function save() {
                 <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-teal-700 px-2 text-xs text-white">{{ minigame.roster_count || 0 }}</span>
             </Link>
             <Link :href="`/minigames/${minigame.id}/rules`" class="rounded-2xl bg-white px-3 py-4 text-center font-semibold">Quy chế</Link>
-            <Link :href="`/minigames/${minigame.id}/matches`" class="rounded-2xl bg-white px-3 py-4 text-center font-semibold">Lịch đấu</Link>
+            <Link :href="`/minigames/${minigame.id}/matches`" class="flex items-center justify-center gap-2 rounded-2xl bg-white px-3 py-4 text-center font-semibold">
+                Lịch đấu
+                <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-teal-700 px-2 text-xs text-white">{{ minigame.match_count || 0 }}</span>
+            </Link>
             <Link :href="`/minigames/${minigame.id}/rankings`" class="rounded-2xl bg-white px-3 py-4 text-center font-semibold">BXH</Link>
         </div>
 
