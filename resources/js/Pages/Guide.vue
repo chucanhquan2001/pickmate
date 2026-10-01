@@ -58,10 +58,10 @@ const steps = computed(() => {
 
     return [
         {
-            title: 'Thêm người chơi',
-            body: 'Vào tab Members, bấm thêm thành viên. Người này phải đang hoạt động thì mới vào được roster.',
-            href: canManage.value ? '/members/create' : '/members',
-            action: canManage.value ? 'Thêm thành viên' : 'Xem thành viên',
+            title: 'Mời người chơi',
+            body: 'Cài đặt hiện mã QR của CLB. Người đã đăng nhập quét mã và gửi lời xin. Chủ hoặc admin duyệt thì họ thành thành viên và mới được chọn vào minigame.',
+            href: canManage.value ? '/join-requests' : '/members',
+            action: canManage.value ? 'Duyệt lời xin' : 'Xem thành viên',
         },
         {
             title: 'Thêm sân nếu cần',

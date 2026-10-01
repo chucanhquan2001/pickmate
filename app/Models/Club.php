@@ -7,6 +7,7 @@ use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Club extends Model
 {
@@ -16,6 +17,7 @@ class Club extends Model
     protected $fillable = [
         'name',
         'slug',
+        'invite_token',
         'logo',
         'timezone',
         'language',
@@ -41,6 +43,15 @@ class Club extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::creating(function (Club $club): void {
+            if (! is_string($club->invite_token) || $club->invite_token === '') {
+                $club->invite_token = Str::random(48);
+            }
+        });
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
@@ -59,5 +70,15 @@ class Club extends Model
     public function minigames(): HasMany
     {
         return $this->hasMany(Minigame::class);
+    }
+
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ClubMembership::class);
+    }
+
+    public function joinRequests(): HasMany
+    {
+        return $this->hasMany(ClubJoinRequest::class);
     }
 }

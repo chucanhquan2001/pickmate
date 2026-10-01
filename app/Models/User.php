@@ -43,13 +43,46 @@ class User extends Authenticatable
         return $this->hasMany(SocialAccount::class);
     }
 
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(ClubMembership::class);
+    }
+
+    public function currentMembership(): ?ClubMembership
+    {
+        if ($this->membershipLoaded && $this->membershipForClubId === $this->club_id) {
+            return $this->resolvedMembership;
+        }
+
+        $this->membershipLoaded = true;
+        $this->membershipForClubId = $this->club_id;
+        $this->resolvedMembership = $this->club_id === null
+            ? null
+            : $this->memberships()->where('club_id', $this->club_id)->first();
+
+        return $this->resolvedMembership;
+    }
+
+    public function currentRole(): ?UserRole
+    {
+        return $this->currentMembership()?->role;
+    }
+
     public function isOwner(): bool
     {
-        return $this->role === UserRole::Owner;
+        return $this->currentRole() === UserRole::Owner;
     }
 
     public function canManageClub(): bool
     {
-        return $this->role === UserRole::Owner || $this->role === UserRole::Admin;
+        $role = $this->currentRole();
+
+        return $role === UserRole::Owner || $role === UserRole::Admin;
     }
+
+    private ?int $membershipForClubId = null;
+
+    private bool $membershipLoaded = false;
+
+    private ?ClubMembership $resolvedMembership = null;
 }

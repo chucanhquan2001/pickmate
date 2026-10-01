@@ -22,7 +22,7 @@ function submit() {
     <AppLayout>
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-semibold">Thành viên</h1>
-            <Link v-if="page.props.auth.user.can_manage" href="/members/create" class="rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Thêm</Link>
+            <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white">Duyệt</Link>
         </div>
 
         <form class="mt-4" @submit.prevent="submit">

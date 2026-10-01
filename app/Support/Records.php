@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Enums\UserRole;
 use App\Models\Club;
+use App\Models\ClubJoinRequest;
 use App\Models\Court;
 use App\Models\MatchGame;
 use App\Models\MatchPlayer;
@@ -16,17 +18,40 @@ class Records
     /**
      * @return array<string, mixed>
      */
-    public static function user(User $user): array
+    public static function user(User $user, ?UserRole $role = null): array
     {
+        $resolved = $role ?? $user->currentRole() ?? $user->role;
+
         return [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'avatar' => $user->avatar,
-            'role' => $user->role->value,
+            'role' => $resolved->value,
             'club_id' => $user->club_id,
-            'can_manage' => $user->canManageClub(),
-            'is_owner' => $user->isOwner(),
+            'can_manage' => $role === null
+                ? $user->canManageClub()
+                : ($resolved === UserRole::Owner || $resolved === UserRole::Admin),
+            'is_owner' => $role === null
+                ? $user->isOwner()
+                : $resolved === UserRole::Owner,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function joinRequest(ClubJoinRequest $joinRequest): array
+    {
+        return [
+            'id' => $joinRequest->id,
+            'name' => $joinRequest->user->name,
+            'email' => $joinRequest->user->email,
+            'avatar' => $joinRequest->user->avatar,
+            'nickname' => $joinRequest->nickname,
+            'gender' => $joinRequest->gender->value,
+            'level' => $joinRequest->level->value,
+            'status' => $joinRequest->status->value,
         ];
     }
 

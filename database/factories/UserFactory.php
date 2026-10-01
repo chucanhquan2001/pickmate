@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Club;
+use App\Models\ClubMembership;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -35,5 +36,24 @@ class UserFactory extends Factory
     public function member(): static
     {
         return $this->state(fn () => ['role' => UserRole::Member]);
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            if ($user->club_id === null) {
+                return;
+            }
+
+            ClubMembership::query()->firstOrCreate(
+                [
+                    'club_id' => $user->club_id,
+                    'user_id' => $user->id,
+                ],
+                [
+                    'role' => $user->role,
+                ],
+            );
+        });
     }
 }

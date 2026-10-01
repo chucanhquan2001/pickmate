@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+const club = computed(() => page.props.club);
 const current = computed(() => page.props.currentMinigame);
 
 const createHref = computed(() => {
@@ -46,7 +47,8 @@ function active(href) {
         <header class="sticky top-0 z-10 flex items-center justify-between gap-3 bg-stone-100/95 px-4 py-3 backdrop-blur">
             <div class="min-w-0">
                 <p class="text-xs font-semibold uppercase tracking-wide text-teal-700">PickMate</p>
-                <p class="truncate text-sm text-stone-600">{{ current?.name || user?.name }}</p>
+                <Link href="/clubs" class="block truncate text-sm font-semibold text-stone-800">{{ club?.name || 'Chọn câu lạc bộ' }}</Link>
+                <p v-if="current" class="truncate text-xs text-stone-500">{{ current.name }}</p>
             </div>
             <div class="flex shrink-0 items-center gap-1">
                 <Link href="/guide" class="rounded-full px-3 py-2 text-sm font-semibold text-teal-700">Hướng dẫn</Link>

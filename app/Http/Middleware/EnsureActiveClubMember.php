@@ -13,8 +13,12 @@ class EnsureActiveClubMember
     {
         $user = $request->user();
 
-        if ($user === null || $user->club_id === null || $user->status !== UserStatus::Active) {
+        if ($user === null || $user->status !== UserStatus::Active) {
             abort(403, 'This account cannot access the club.');
+        }
+
+        if ($user->currentMembership() === null) {
+            return redirect()->route('clubs.index');
         }
 
         return $next($request);

@@ -19,19 +19,21 @@ it('signs in the owner from google and ends the session on logout', function () 
 
     $this->get('/login')->assertInertia(fn ($page) => $page->component('Login'));
     $this->get('/auth/google')->assertRedirect('https://socialite.fake/google/authorize');
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('clubs.index'));
 
     $user = User::query()->where('email', 'owner@example.com')->first();
 
     expect($user)->not->toBeNull()
-        ->and($user->role)->toBe(UserRole::Owner)
-        ->and($user->club_id)->toBe(1);
+        ->and($user->role)->toBe(UserRole::Member)
+        ->and($user->club_id)->toBeNull()
+        ->and($user->memberships)->toHaveCount(0);
 
     $this->assertAuthenticatedAs($user);
 
-    $this->get('/dashboard')->assertInertia(fn ($page) => $page
-        ->component('Dashboard')
-        ->where('auth.user.role', 'owner'));
+    $this->get('/dashboard')->assertRedirect(route('clubs.index'));
+    $this->get('/clubs')->assertInertia(fn ($page) => $page
+        ->component('Clubs/Index')
+        ->where('auth.user.role', 'member'));
 
     $this->post('/logout')->assertRedirect(route('login'));
     $this->assertGuest();
@@ -46,7 +48,7 @@ it('links a second provider to the same verified email', function () {
         'email_verified' => true,
     ]));
 
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('clubs.index'));
 
     Socialite::fake('facebook', SocialiteUser::fake([
         'id' => 'facebook-1',
@@ -54,11 +56,11 @@ it('links a second provider to the same verified email', function () {
         'name' => 'Owner Facebook',
     ]));
 
-    $this->get('/auth/facebook/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/facebook/callback')->assertRedirect(route('clubs.index'));
 
     expect(User::query()->count())->toBe(1)
         ->and(SocialAccount::query()->count())->toBe(2)
-        ->and(User::query()->first()->role)->toBe(UserRole::Owner);
+        ->and(User::query()->first()->role)->toBe(UserRole::Member);
 });
 
 it('does not merge an unverified email into an existing user', function () {
@@ -67,7 +69,7 @@ it('does not merge an unverified email into an existing user', function () {
         'email' => 'shared@example.com',
         'email_verified' => true,
     ]));
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('clubs.index'));
 
     Socialite::fake('google', SocialiteUser::fake([
         'id' => 'google-2',
@@ -75,13 +77,13 @@ it('does not merge an unverified email into an existing user', function () {
         'name' => 'Other',
         'email_verified' => false,
     ]));
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('clubs.index'));
 
     expect(User::query()->count())->toBe(2)
         ->and(User::query()->where('name', 'Other')->first()->role)->toBe(UserRole::Member);
 });
 
-it('links a login to a club member with the same email', function () {
+it('does not join a club or link a member just by logging in', function () {
     $member = Member::factory()->create([
         'club_id' => 1,
         'email' => 'player@example.com',
@@ -95,12 +97,13 @@ it('links a login to a club member with the same email', function () {
         'email_verified' => true,
     ]));
 
-    $this->get('/auth/google/callback')->assertRedirect(route('dashboard'));
+    $this->get('/auth/google/callback')->assertRedirect(route('clubs.index'));
 
     $user = User::query()->where('email', 'player@example.com')->first();
 
-    expect($user->role)->toBe(UserRole::Member)
-        ->and($member->refresh()->user_id)->toBe($user->id);
+    expect($user->club_id)->toBeNull()
+        ->and($user->memberships)->toHaveCount(0)
+        ->and($member->refresh()->user_id)->toBeNull();
 });
 
 it('rejects a social login that cannot be verified', function () {

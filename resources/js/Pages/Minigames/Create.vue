@@ -1,8 +1,9 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
-import { useForm } from '@inertiajs/vue3';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { errorText, formats } from '../../labels';
+
+const page = usePage();
 
 const form = useForm({
     name: '',
@@ -19,6 +20,7 @@ function submit() {
     <Head title="Tạo minigame" />
     <AppLayout>
         <h1 class="text-2xl font-semibold">Tạo minigame</h1>
+        <p class="mt-1 text-sm text-stone-500">CLB {{ page.props.club?.name }}</p>
         <form class="mt-4 space-y-3" @submit.prevent="submit">
             <label class="block text-sm font-semibold">Tên
                 <input v-model="form.name" required class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal">

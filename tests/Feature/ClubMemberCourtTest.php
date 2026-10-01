@@ -2,6 +2,7 @@
 
 use App\Enums\UserRole;
 use App\Models\Club;
+use App\Models\ClubMembership;
 use App\Models\Court;
 use App\Models\Member;
 use App\Models\Minigame;
@@ -12,15 +13,12 @@ it('lets an admin manage members and keeps club defaults from changing an existi
     $club = Club::query()->firstOrFail();
     $club->update(['default_win_points' => 9]);
 
-    $this->actingAs($admin)->post('/members', [
+    $createdMember = Member::factory()->create([
+        'club_id' => $club->id,
         'name' => 'Nguyen Van A',
-        'nickname' => 'A',
-        'gender' => 'male',
         'email' => 'a@example.com',
-        'level' => 'intermediate',
-    ])->assertRedirect();
-
-    $created = Member::query()->where('email', 'a@example.com')->value('id');
+    ]);
+    $created = $createdMember->id;
 
     $this->actingAs($admin)->get('/members?search=Nguyen')
         ->assertOk()
@@ -84,7 +82,8 @@ it('allows the owner to update club settings and promote an admin', function () 
         'role' => 'admin',
     ])->assertRedirect(route('settings'));
 
-    expect($member->refresh()->role)->toBe(UserRole::Admin);
+    expect(ClubMembership::query()->where('user_id', $member->id)->where('club_id', $owner->club_id)->first()->role)
+        ->toBe(UserRole::Admin);
 });
 
 it('forbids a member from creating club data and hides another club', function () {
@@ -95,9 +94,9 @@ it('forbids a member from creating club data and hides another club', function (
         'gender' => 'male',
     ]);
 
-    $this->actingAs($memberUser)->post('/members', [
+    $this->actingAs($memberUser)->post('/minigames', [
         'name' => 'Blocked',
-        'gender' => 'male',
+        'format' => 'double_male',
     ])->assertForbidden();
 
     $this->actingAs($memberUser)->get("/members/{$foreignMember->id}")

@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\MemberLevel;
-use App\Enums\MemberStatus;
 use App\Http\Controllers\Concerns\ResolvesClubModels;
-use App\Http\Requests\StoreMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
 use App\Models\MatchGame;
 use App\Models\Member;
@@ -46,25 +43,6 @@ class MemberController extends Controller
                 'search' => $search,
             ],
         ]);
-    }
-
-    public function create(Request $request): Response
-    {
-        abort_unless($request->user()->canManageClub(), 403);
-
-        return Inertia::render('Members/Create');
-    }
-
-    public function store(StoreMemberRequest $request): RedirectResponse
-    {
-        $data = $request->validated();
-        $data['level'] ??= MemberLevel::Beginner->value;
-        $data['status'] ??= MemberStatus::Active->value;
-        $data['joined_at'] ??= now()->toDateString();
-
-        $member = $this->club($request)->members()->create($data);
-
-        return to_route('members.show', $member);
     }
 
     public function show(Request $request, int $member): Response

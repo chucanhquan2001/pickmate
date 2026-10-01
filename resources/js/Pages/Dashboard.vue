@@ -101,8 +101,8 @@ function clearSelection() {
 
             <p v-if="minigames.length === 0" class="rounded-3xl bg-white p-4 text-sm text-stone-500">Chưa có minigame đang chạy.</p>
 
-            <Link v-if="page.props.auth.user.can_manage" href="/members/create" class="flex min-h-12 items-center justify-center rounded-2xl border border-stone-300 bg-white font-semibold">
-                Thêm thành viên
+            <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="flex min-h-12 items-center justify-center rounded-2xl border border-stone-300 bg-white font-semibold">
+                Duyệt thành viên
             </Link>
         </section>
     </AppLayout>

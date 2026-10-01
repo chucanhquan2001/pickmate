@@ -50,7 +50,7 @@ trait ResolvesClubModels
     protected function clubUser(Request $request, int $user): User
     {
         return User::query()
-            ->where('club_id', $request->user()->club_id)
+            ->whereHas('memberships', fn ($query) => $query->where('club_id', $request->user()->club_id))
             ->findOrFail($user);
     }
 }

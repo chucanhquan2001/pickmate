@@ -21,12 +21,17 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $minigame = $user ? app(CurrentMinigame::class)->resolve($request) : null;
+        $club = $user?->club_id ? $user->club : null;
 
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user ? Records::user($user) : null,
             ],
+            'club' => $club ? [
+                'id' => $club->id,
+                'name' => $club->name,
+            ] : null,
             'currentMinigame' => $minigame ? Records::summary($minigame) : null,
         ];
     }

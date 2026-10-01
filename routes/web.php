@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClubController;
+use App\Http\Controllers\ClubDirectoryController;
 use App\Http\Controllers\CourtController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\JoinController;
+use App\Http\Controllers\JoinRequestController;
 use App\Http\Controllers\MatchController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MinigameController;
@@ -11,6 +14,20 @@ use App\Http\Controllers\RankingController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\RememberCurrentMinigame;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/manifest.webmanifest', function () {
+    return response(file_get_contents(public_path('manifest.webmanifest')), 200, [
+        'Content-Type' => 'application/manifest+json',
+        'Cache-Control' => 'no-cache',
+    ]);
+});
+
+Route::get('/sw.js', function () {
+    return response(file_get_contents(public_path('sw.js')), 200, [
+        'Content-Type' => 'application/javascript; charset=UTF-8',
+        'Cache-Control' => 'no-cache',
+    ]);
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -29,6 +46,14 @@ Route::post('/logout', [AuthController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/clubs', [ClubDirectoryController::class, 'index'])->name('clubs.index');
+    Route::post('/clubs', [ClubDirectoryController::class, 'store'])->name('clubs.store');
+    Route::post('/clubs/{club}/switch', [ClubDirectoryController::class, 'switch'])->name('clubs.switch');
+    Route::get('/join/{token}', [JoinController::class, 'show'])->name('join.show');
+    Route::post('/join/{token}', [JoinController::class, 'store'])->name('join.store');
+});
+
 Route::middleware(['auth', 'club.active'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -36,10 +61,12 @@ Route::middleware(['auth', 'club.active'])->group(function () {
     Route::delete('/current-minigame', [DashboardController::class, 'clear'])->name('minigames.clear');
 
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
-    Route::get('/members/create', [MemberController::class, 'create'])->name('members.create');
-    Route::post('/members', [MemberController::class, 'store'])->name('members.store');
     Route::get('/members/{member}', [MemberController::class, 'show'])->name('members.show');
     Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
+
+    Route::get('/join-requests', [JoinRequestController::class, 'index'])->name('join-requests.index');
+    Route::post('/join-requests/{joinRequest}/approve', [JoinRequestController::class, 'approve'])->name('join-requests.approve');
+    Route::post('/join-requests/{joinRequest}/reject', [JoinRequestController::class, 'reject'])->name('join-requests.reject');
 
     Route::get('/courts', [CourtController::class, 'index'])->name('courts.index');
     Route::post('/courts', [CourtController::class, 'store'])->name('courts.store');
@@ -47,6 +74,7 @@ Route::middleware(['auth', 'club.active'])->group(function () {
 
     Route::get('/settings', [ClubController::class, 'edit'])->name('settings');
     Route::put('/settings', [ClubController::class, 'update'])->name('settings.update');
+    Route::post('/settings/invite', [ClubController::class, 'rotateInvite'])->name('settings.invite');
     Route::patch('/settings/users/{user}', [UserController::class, 'update'])->name('users.update');
 
     Route::get('/minigames', [MinigameController::class, 'index'])->name('minigames.index');

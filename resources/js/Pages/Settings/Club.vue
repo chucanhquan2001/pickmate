@@ -1,11 +1,13 @@
 <script setup>
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import InviteQr from '../../Components/InviteQr.vue';
 import { errorText, roles, label } from '../../labels';
 
 const props = defineProps({
     club: { type: Object, required: true },
     users: { type: Array, required: true },
+    inviteUrl: { type: String, default: null },
 });
 
 const page = usePage();
@@ -28,6 +30,10 @@ function saveClub() {
 function changeRole(user, role) {
     router.patch(`/settings/users/${user.id}`, { role });
 }
+
+function rotateInvite() {
+    router.post('/settings/invite');
+}
 </script>
 
 <template>
@@ -36,6 +42,15 @@ function changeRole(user, role) {
         <h1 class="text-2xl font-semibold">Cài đặt CLB</h1>
         <p class="mt-1 text-sm text-stone-500">{{ club.name }}</p>
         <Link href="/courts" class="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-white font-semibold">Quản lý sân</Link>
+        <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-white font-semibold">Duyệt lời xin</Link>
+
+        <section v-if="inviteUrl" class="mt-6 rounded-3xl bg-white p-4">
+            <h2 class="font-semibold">Mời vào CLB</h2>
+            <p class="mt-1 text-sm text-stone-500">Người khác quét mã này bằng camera điện thoại, đăng nhập, rồi chờ duyệt.</p>
+            <InviteQr :value="inviteUrl" class="mt-4" />
+            <p class="mt-3 break-all text-sm text-stone-600">{{ inviteUrl }}</p>
+            <button v-if="page.props.auth.user.is_owner" type="button" class="mt-4 flex min-h-11 w-full items-center justify-center rounded-2xl bg-stone-100 font-semibold" @click="rotateInvite">Tạo mã mới</button>
+        </section>
 
         <form v-if="page.props.auth.user.is_owner" class="mt-6 space-y-3" @submit.prevent="saveClub">
             <label class="block text-sm font-semibold">Tên CLB
