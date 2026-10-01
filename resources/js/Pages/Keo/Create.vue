@@ -1,8 +1,10 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import LocalDateTimePicker from '../../Components/LocalDateTimePicker.vue';
 import MemberPicker from '../../Components/MemberPicker.vue';
+import { combineLocalDateTime, defaultLocalDateTime } from '../../datetime';
 import { errorText, scoringTypes } from '../../labels';
 
 defineProps({
@@ -10,10 +12,14 @@ defineProps({
     courts: { type: Array, required: true },
 });
 
+const page = usePage();
+const timezone = computed(() => page.props.club?.timezone ?? 'Asia/Ho_Chi_Minh');
+const defaults = defaultLocalDateTime(timezone.value);
+
 const form = useForm({
     format: 'single',
     scoring_type: 'side_out',
-    scheduled_at: '',
+    scheduled_at: combineLocalDateTime(defaults.date, defaults.hour, defaults.minute),
     court_id: '',
     item: '',
     quantity: '',
@@ -57,9 +63,12 @@ function submit() {
                     <option v-for="(name, value) in scoringTypes" :key="value" :value="value">{{ name }}</option>
                 </select>
             </label>
-            <label class="block text-sm font-semibold">Thời gian
-                <input v-model="form.scheduled_at" type="datetime-local" required class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal">
-            </label>
+            <LocalDateTimePicker
+                v-model="form.scheduled_at"
+                :timezone="timezone"
+                date-label="Ngày kèo"
+                time-label="Giờ kèo"
+            />
             <label class="block text-sm font-semibold">Sân
                 <select v-model="form.court_id" required class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal">
                     <option value="">Chọn sân</option>

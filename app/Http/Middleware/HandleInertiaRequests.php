@@ -32,6 +32,7 @@ class HandleInertiaRequests extends Middleware
             'club' => $club ? [
                 'id' => $club->id,
                 'name' => $club->name,
+                'timezone' => $club->timezone ?: config('pickmate.club.timezone'),
             ] : null,
             'currentMinigame' => $minigame ? Records::summary($minigame) : null,
             'pendingJoinRequests' => $user && $club && $user->canManageClub()

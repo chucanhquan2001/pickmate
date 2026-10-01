@@ -62,7 +62,7 @@ export function label(map, value) {
     return map[value] ?? value ?? '';
 }
 
-export function formatWhen(value) {
+export function formatWhen(value, timezone = 'Asia/Ho_Chi_Minh') {
     if (!value) {
         return '';
     }
@@ -72,6 +72,8 @@ export function formatWhen(value) {
         minute: '2-digit',
         day: '2-digit',
         month: '2-digit',
+        timeZone: timezone,
+        hour12: false,
     }).format(new Date(value));
 }
 

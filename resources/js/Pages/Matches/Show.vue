@@ -1,6 +1,8 @@
 <script setup>
+import { computed } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import LocalDateTimePicker from '../../Components/LocalDateTimePicker.vue';
 import StatusBadge from '../../Components/StatusBadge.vue';
 import { errorText, formatWhen, label, scoringTypes, teamLabel } from '../../labels';
 
@@ -11,8 +13,9 @@ const props = defineProps({
 });
 
 const page = usePage();
+const timezone = computed(() => page.props.club?.timezone ?? 'Asia/Ho_Chi_Minh');
 const form = useForm({
-    scheduled_at: props.match.scheduled_at ? props.match.scheduled_at.slice(0, 16) : '',
+    scheduled_at: props.match.scheduled_at ?? '',
     court_id: props.match.court_id || '',
 });
 
@@ -32,7 +35,7 @@ function save() {
         <div class="flex items-start justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold">{{ minigame.name }}</h1>
-                <p class="mt-1 text-sm text-stone-500">{{ formatWhen(match.scheduled_at) }}</p>
+                <p class="mt-1 text-sm text-stone-500">{{ formatWhen(match.scheduled_at, timezone) }}</p>
             </div>
             <StatusBadge :value="match.status" kind="match" />
         </div>
@@ -60,7 +63,12 @@ function save() {
 
         <form v-if="page.props.auth.user.can_manage && mutable" class="mt-6 space-y-3" @submit.prevent="save">
             <h2 class="font-semibold">Sửa lịch</h2>
-            <input v-model="form.scheduled_at" type="datetime-local" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3">
+            <LocalDateTimePicker
+                v-model="form.scheduled_at"
+                :timezone="timezone"
+                date-label="Ngày đấu"
+                time-label="Giờ đấu"
+            />
             <select v-model="form.court_id" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3">
                 <option value="">Chưa chọn sân</option>
                 <option v-for="court in courts" :key="court.id" :value="court.id">{{ court.code }} · {{ court.name }}</option>

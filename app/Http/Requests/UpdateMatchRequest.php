@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesScheduledAt;
+
 class UpdateMatchRequest extends ClubWriteRequest
 {
+    use NormalizesScheduledAt;
+
     protected function prepareForValidation(): void
     {
         if ($this->input('court_id') === '') {
             $this->merge(['court_id' => null]);
         }
+
+        $this->normalizeScheduledAt();
     }
 
     /**

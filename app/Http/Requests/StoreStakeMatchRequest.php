@@ -5,11 +5,19 @@ namespace App\Http\Requests;
 use App\Enums\ScoringType;
 use App\Enums\StakeFormat;
 use App\Enums\UserStatus;
+use App\Http\Requests\Concerns\NormalizesScheduledAt;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreStakeMatchRequest extends FormRequest
 {
+    use NormalizesScheduledAt;
+
+    protected function prepareForValidation(): void
+    {
+        $this->normalizeScheduledAt();
+    }
+
     public function authorize(): bool
     {
         $user = $this->user();
