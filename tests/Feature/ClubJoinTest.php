@@ -28,6 +28,28 @@ it('rejects a skill rating that is not one decimal place', function () {
     expect(Club::query()->where('name', 'CLB Sai')->exists())->toBeFalse();
 });
 
+it('accepts a skill rating with a comma decimal separator', function () {
+    $user = User::factory()->create([
+        'club_id' => null,
+        'role' => UserRole::Member,
+    ]);
+
+    $this->actingAs($user)->post('/clubs', [
+        'name' => 'CLB Phay',
+        'gender' => 'male',
+        'dupr_rating' => '2,5',
+        'spcn_rating' => '3,0',
+    ])->assertRedirect(route('dashboard'));
+
+    $member = Member::query()
+        ->where('club_id', User::query()->findOrFail($user->id)->club_id)
+        ->where('user_id', $user->id)
+        ->firstOrFail();
+
+    expect($member->dupr_rating)->toBe('2.5')
+        ->and($member->spcn_rating)->toBe('3.0');
+});
+
 it('creates a private club and makes the creator its owner and member', function () {
     $user = User::factory()->create([
         'club_id' => null,

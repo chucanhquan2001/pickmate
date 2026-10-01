@@ -19,16 +19,29 @@ class SkillRating implements ValidationRule
             $value = $request->input($field);
 
             if (is_string($value)) {
-                $trimmed[$field] = trim($value);
+                $trimmed[$field] = self::normalize(trim($value));
             }
         }
 
         return $trimmed;
     }
 
+    public static function normalize(string $value): string
+    {
+        return str_replace(',', '.', $value);
+    }
+
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! is_string($value) || preg_match('/^(?:[1-7]\.[0-9]|8\.0)$/', $value) !== 1) {
+        if (! is_string($value)) {
+            $fail('Điểm phải có đúng một chữ số thập phân, từ 1.0 đến 8.0.');
+
+            return;
+        }
+
+        $value = self::normalize($value);
+
+        if (preg_match('/^(?:[1-7]\.[0-9]|8\.0)$/', $value) !== 1) {
             $fail('Điểm phải có đúng một chữ số thập phân, từ 1.0 đến 8.0.');
         }
     }
