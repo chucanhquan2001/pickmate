@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\MemberGender;
+use App\Enums\MinigameFormat;
 use App\Enums\MinigameStatus;
 use App\Enums\UserRole;
 use App\Models\Court;
@@ -39,6 +40,7 @@ it('runs the minigame loop and keeps rankings inside that minigame', function ()
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
         'court_id' => $court->id,
+        'scoring_type' => 'side_out',
         'team_1' => [$players[0]->id, $players[1]->id],
         'team_2' => [$players[2]->id, $players[3]->id],
     ])->assertSessionHasErrors('minigame');
@@ -53,6 +55,7 @@ it('runs the minigame loop and keeps rankings inside that minigame', function ()
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
         'court_id' => $court->id,
+        'scoring_type' => 'side_out',
         'team_1' => [$players[0]->id, $players[1]->id],
         'team_2' => [$players[2]->id, $players[3]->id],
     ])->assertRedirect();
@@ -69,7 +72,8 @@ it('runs the minigame loop and keeps rankings inside that minigame', function ()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Matches/Show')
             ->where('match.winner_team', 1)
-            ->where('match.status', 'completed'));
+            ->where('match.status', 'completed')
+            ->where('match.scoring_type', 'side_out'));
 
     $rankings = rankingsByMember($minigameId);
 
@@ -120,6 +124,7 @@ it('runs the minigame loop and keeps rankings inside that minigame', function ()
 
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHours(2)->toIso8601String(),
+        'scoring_type' => 'side_out',
         'team_1' => [$players[0]->id, $players[1]->id],
         'team_2' => [$players[2]->id, $players[3]->id],
     ])->assertSessionHasErrors('minigame');
@@ -163,6 +168,7 @@ it('scores a split best-of-three match without a clean-win bonus', function () {
 
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'rally',
         'team_1' => [$players[0]->id, $players[1]->id],
         'team_2' => [$players[2]->id, $players[3]->id],
     ])->assertRedirect();
@@ -178,7 +184,9 @@ it('scores a split best-of-three match without a clean-win bonus', function () {
     ])->assertRedirect();
 
     $this->get("/minigames/{$minigameId}/matches/{$matchId}")
-        ->assertInertia(fn (Assert $page) => $page->where('match.winner_team', 1));
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('match.winner_team', 1)
+            ->where('match.scoring_type', 'rally'));
 
     $points = rankingsByMember($minigameId);
 
@@ -213,12 +221,14 @@ it('rejects players who are not on the roster or do not match the format', funct
 
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'side_out',
         'team_1' => [$males[0]->id, $males[1]->id],
         'team_2' => [$outsider->id],
     ])->assertSessionHasErrors('team_1');
 
     $this->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'side_out',
         'team_1' => [$males[0]->id],
         'team_2' => [$outsider->id],
     ])->assertSessionHasErrors('team_1');
@@ -243,6 +253,7 @@ it('lets a member read the ranking but not enter a result', function () {
 
     $this->actingAs($admin)->post("/minigames/{$minigameId}/matches", [
         'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'rally',
         'team_1' => [$players[0]->id],
         'team_2' => [$players[1]->id],
     ])->assertRedirect();
@@ -258,6 +269,121 @@ it('lets a member read the ranking but not enter a result', function () {
             ['team_1_score' => 11, 'team_2_score' => 3],
         ],
     ])->assertForbidden();
+});
+
+it('updates the format of an active minigame until a match exists', function () {
+    $admin = clubUser();
+    $this->actingAs($admin);
+
+    $this->post('/minigames', [
+        'name' => 'Toi 1-10',
+        'format' => 'single_male',
+    ])->assertRedirect();
+
+    $minigame = Minigame::query()->where('name', 'Toi 1-10')->firstOrFail();
+    $this->post("/minigames/{$minigame->id}/activate")->assertRedirect();
+
+    $this->put("/minigames/{$minigame->id}", [
+        'name' => 'Toi 1-10',
+        'description' => 'Buoi toi',
+        'format' => 'double_male',
+    ])->assertRedirect(route('minigames.show', $minigame));
+
+    $minigame->refresh();
+    expect($minigame->format)->toBe(MinigameFormat::DoubleMale)
+        ->and($minigame->description)->toBe('Buoi toi');
+
+    $players = Member::factory()->count(4)->create([
+        'club_id' => $minigame->club_id,
+        'gender' => MemberGender::Male,
+    ]);
+    $this->put("/minigames/{$minigame->id}/roster", [
+        'member_ids' => $players->pluck('id')->all(),
+    ])->assertRedirect();
+    $this->post("/minigames/{$minigame->id}/matches", [
+        'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'side_out',
+        'team_1' => [$players[0]->id, $players[1]->id],
+        'team_2' => [$players[2]->id, $players[3]->id],
+    ])->assertRedirect();
+
+    $this->put("/minigames/{$minigame->id}", [
+        'name' => 'Toi 1-10',
+        'format' => 'single_male',
+    ])->assertSessionHasErrors('format');
+
+    expect($minigame->refresh()->format)->toBe(MinigameFormat::DoubleMale);
+});
+
+it('saves custom rules from the create form and scores a win as one point', function () {
+    $admin = clubUser();
+    $players = Member::factory()->count(2)->create([
+        'club_id' => 1,
+        'gender' => MemberGender::Male,
+    ]);
+
+    $this->actingAs($admin);
+
+    $this->get('/minigames/create')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Minigames/Create')
+            ->where('clubDefaults.default_score', 11)
+            ->where('clubDefaults.best_of', 1)
+            ->where('clubDefaults.participation_points', 1)
+            ->where('clubDefaults.win_points', 3)
+            ->where('clubDefaults.loss_points', 0)
+            ->where('clubDefaults.clean_win_bonus', 1));
+
+    $this->post('/minigames', [
+        'name' => 'Vong tron',
+        'format' => 'single_male',
+        'default_score' => 11,
+        'best_of' => 1,
+        'participation_points' => 0,
+        'win_points' => 1,
+        'loss_points' => 0,
+        'clean_win_bonus' => 0,
+    ])->assertRedirect();
+
+    $minigame = Minigame::query()->where('name', 'Vong tron')->firstOrFail();
+
+    expect($minigame->participation_points)->toBe(0)
+        ->and($minigame->win_points)->toBe(1)
+        ->and($minigame->loss_points)->toBe(0)
+        ->and($minigame->clean_win_bonus)->toBe(0);
+
+    $this->put("/minigames/{$minigame->id}/roster", [
+        'member_ids' => $players->pluck('id')->all(),
+    ])->assertRedirect();
+    $this->post("/minigames/{$minigame->id}/activate")->assertRedirect();
+
+    $this->post("/minigames/{$minigame->id}/matches", [
+        'scheduled_at' => now()->addHour()->toIso8601String(),
+        'scoring_type' => 'rally',
+        'team_1' => [$players[0]->id],
+        'team_2' => [$players[1]->id],
+    ])->assertRedirect();
+
+    $matchId = MatchGame::query()->where('minigame_id', $minigame->id)->value('id');
+
+    $this->post("/minigames/{$minigame->id}/matches/{$matchId}/result", [
+        'sets' => [
+            ['team_1_score' => 11, 'team_2_score' => 7],
+        ],
+    ])->assertRedirect();
+
+    $rankings = rankingsByMember($minigame->id);
+
+    expect($rankings[$players[0]->id]['points'])->toBe(1)
+        ->and($rankings[$players[1]->id]['points'])->toBe(0);
+
+    $this->get("/minigames/{$minigame->id}")
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('minigame.win_points', 1)
+            ->where('minigame.participation_points', 0)
+            ->where('minigame.loss_points', 0)
+            ->where('minigame.clean_win_bonus', 0));
 });
 
 function rankingsByMember(int $minigameId)

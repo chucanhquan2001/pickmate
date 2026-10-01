@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MatchStatus;
+use App\Enums\ScoringType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,6 +17,7 @@ class MatchGame extends Model
         'session_id',
         'court_id',
         'status',
+        'scoring_type',
         'scheduled_at',
         'started_at',
         'completed_at',
@@ -26,6 +28,7 @@ class MatchGame extends Model
     {
         return [
             'status' => MatchStatus::class,
+            'scoring_type' => ScoringType::class,
             'scheduled_at' => 'datetime',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',

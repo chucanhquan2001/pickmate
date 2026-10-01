@@ -11,6 +11,7 @@ use App\Http\Controllers\MatchController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\MinigameController;
 use App\Http\Controllers\RankingController;
+use App\Http\Controllers\StakeMatchController;
 use App\Http\Controllers\UserController;
 use App\Http\Middleware\RememberCurrentMinigame;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,8 @@ Route::middleware(['auth', 'club.active'])->group(function () {
     Route::get('/guide', [DashboardController::class, 'guide'])->name('guide');
     Route::delete('/current-minigame', [DashboardController::class, 'clear'])->name('minigames.clear');
 
+    Route::get('/invite', [ClubController::class, 'invite'])->name('invite');
+
     Route::get('/members', [MemberController::class, 'index'])->name('members.index');
     Route::get('/members/{member}', [MemberController::class, 'show'])->name('members.show');
     Route::put('/members/{member}', [MemberController::class, 'update'])->name('members.update');
@@ -72,10 +75,19 @@ Route::middleware(['auth', 'club.active'])->group(function () {
     Route::post('/courts', [CourtController::class, 'store'])->name('courts.store');
     Route::patch('/courts/{court}', [CourtController::class, 'update'])->name('courts.update');
 
+    Route::get('/manage', [ClubController::class, 'manage'])->name('manage');
+    Route::redirect('/manage/roles', '/members');
+
     Route::get('/settings', [ClubController::class, 'edit'])->name('settings');
     Route::put('/settings', [ClubController::class, 'update'])->name('settings.update');
     Route::post('/settings/invite', [ClubController::class, 'rotateInvite'])->name('settings.invite');
     Route::patch('/settings/users/{user}', [UserController::class, 'update'])->name('users.update');
+
+    Route::get('/keo', [StakeMatchController::class, 'index'])->name('keo.index');
+    Route::get('/keo/create', [StakeMatchController::class, 'create'])->name('keo.create');
+    Route::post('/keo', [StakeMatchController::class, 'store'])->name('keo.store');
+    Route::post('/keo/{stakeMatch}/score', [StakeMatchController::class, 'score'])->name('keo.score')->whereNumber('stakeMatch');
+    Route::get('/keo/{stakeMatch}', [StakeMatchController::class, 'show'])->name('keo.show')->whereNumber('stakeMatch');
 
     Route::get('/minigames', [MinigameController::class, 'index'])->name('minigames.index');
     Route::get('/minigames/create', [MinigameController::class, 'create'])->name('minigames.create');

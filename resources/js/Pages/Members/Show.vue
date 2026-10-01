@@ -2,8 +2,8 @@
 import { Head } from '@inertiajs/vue3';
 import { useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import { errorText, formats, genders, label, levels } from '../../labels';
-import { formatWhen, teamLabel } from '../../labels';
+import SkillRatings from '../../Components/SkillRatings.vue';
+import { errorText, formats, formatWhen, genders, label, skillLabel, teamLabel } from '../../labels';
 
 const props = defineProps({
     member: { type: Object, required: true },
@@ -16,7 +16,8 @@ const form = useForm({
     gender: props.member.gender,
     email: props.member.email || '',
     phone: props.member.phone || '',
-    level: props.member.level,
+    dupr_rating: props.member.dupr_rating || '',
+    spcn_rating: props.member.spcn_rating || '',
     status: props.member.status,
 });
 
@@ -29,7 +30,7 @@ function submit() {
     <Head :title="member.name" />
     <AppLayout>
         <h1 class="text-2xl font-semibold">{{ member.name }}</h1>
-        <p class="mt-1 text-sm text-stone-500">{{ member.nickname }} · {{ label(genders, member.gender) }} · {{ label(levels, member.level) }}</p>
+        <p class="mt-1 text-sm text-stone-500">{{ member.nickname }} · {{ label(genders, member.gender) }} · {{ skillLabel(member.dupr_rating, member.spcn_rating) }}</p>
 
         <section class="mt-4 space-y-2">
             <h2 class="font-semibold">Minigame</h2>
@@ -56,9 +57,7 @@ function submit() {
             <select v-model="form.gender" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3">
                 <option v-for="(name, value) in genders" :key="value" :value="value">{{ name }}</option>
             </select>
-            <select v-model="form.level" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3">
-                <option v-for="(name, value) in levels" :key="value" :value="value">{{ name }}</option>
-            </select>
+            <SkillRatings v-model:dupr="form.dupr_rating" v-model:spcn="form.spcn_rating" :errors="form.errors" />
             <select v-model="form.status" class="w-full rounded-2xl border border-stone-300 bg-white px-4 py-3">
                 <option value="active">Đang chơi</option>
                 <option value="inactive">Ngừng</option>

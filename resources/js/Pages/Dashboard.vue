@@ -20,6 +20,12 @@ function clearSelection() {
 <template>
     <Head title="Home" />
     <AppLayout>
+        <Link href="/keo" class="mb-4 block rounded-3xl bg-white p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-teal-700">Kèo độ mini</p>
+            <p class="mt-1 font-semibold">Xem kèo đã tham gia</p>
+            <p class="mt-1 text-sm text-stone-600">Tạo trận đơn hoặc đôi, chọn sân, giờ và kèo.</p>
+        </Link>
+
         <Link href="/guide" class="mb-4 block rounded-3xl bg-white p-4">
             <p class="text-xs font-semibold uppercase tracking-wide text-teal-700">Hướng dẫn</p>
             <p class="mt-1 font-semibold">Tạo lịch đấu ở đâu?</p>
@@ -101,8 +107,12 @@ function clearSelection() {
 
             <p v-if="minigames.length === 0" class="rounded-3xl bg-white p-4 text-sm text-stone-500">Chưa có minigame đang chạy.</p>
 
-            <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="flex min-h-12 items-center justify-center rounded-2xl border border-stone-300 bg-white font-semibold">
+            <Link v-if="page.props.auth.user.can_manage" href="/invite" class="flex min-h-12 items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white">
+                Mã QR mời vào CLB
+            </Link>
+            <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-stone-300 bg-white font-semibold">
                 Duyệt thành viên
+                <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-teal-700 px-2 text-xs text-white">{{ page.props.pendingJoinRequests }}</span>
             </Link>
         </section>
     </AppLayout>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-class UpdateUserRoleRequest extends OwnerRequest
+class UpdateUserRoleRequest extends ClubWriteRequest
 {
     /**
      * @return array<string, mixed>

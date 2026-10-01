@@ -2,7 +2,7 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import MemberPicker from '../../Components/MemberPicker.vue';
-import { errorText } from '../../labels';
+import { errorText, scoringTypes } from '../../labels';
 
 const props = defineProps({
     minigame: { type: Object, required: true },
@@ -13,6 +13,7 @@ const props = defineProps({
 const form = useForm({
     scheduled_at: '',
     court_id: '',
+    scoring_type: 'side_out',
     team_1: [],
     team_2: [],
 });
@@ -40,8 +41,13 @@ function submit() {
                     <option v-for="court in courts" :key="court.id" :value="court.id">{{ court.code }} · {{ court.name }}</option>
                 </select>
             </label>
-            <p v-if="form.errors.minigame || form.errors.team_1 || form.errors.court_id" class="text-sm text-red-700">
-                {{ errorText(form.errors.minigame || form.errors.team_1 || form.errors.court_id) }}
+            <label class="block text-sm font-semibold">Loại tính điểm
+                <select v-model="form.scoring_type" required class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal">
+                    <option v-for="(name, value) in scoringTypes" :key="value" :value="value">{{ name }}</option>
+                </select>
+            </label>
+            <p v-if="form.errors.minigame || form.errors.team_1 || form.errors.court_id || form.errors.scoring_type" class="text-sm text-red-700">
+                {{ errorText(form.errors.minigame || form.errors.team_1 || form.errors.court_id || form.errors.scoring_type) }}
             </p>
             <section>
                 <h2 class="font-semibold">Đội 1</h2>

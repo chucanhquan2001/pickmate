@@ -80,6 +80,19 @@ class User extends Authenticatable
         return $role === UserRole::Owner || $role === UserRole::Admin;
     }
 
+    public function canChangeMembershipRole(ClubMembership $membership): bool
+    {
+        if ($membership->user_id === $this->id || $membership->role === UserRole::Owner) {
+            return false;
+        }
+
+        if ($membership->role === UserRole::Admin) {
+            return $this->isOwner();
+        }
+
+        return $this->canManageClub();
+    }
+
     private ?int $membershipForClubId = null;
 
     private bool $membershipLoaded = false;

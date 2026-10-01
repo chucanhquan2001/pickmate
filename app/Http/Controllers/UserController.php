@@ -17,35 +17,24 @@ class UserController extends Controller
     {
         $target = $this->clubUser($request, $user);
 
-        if ($target->id === $request->user()->id) {
-            throw ValidationException::withMessages([
-                'role' => 'You cannot change your own role.',
-            ]);
-        }
-
         $membership = ClubMembership::query()
             ->where('club_id', $request->user()->club_id)
             ->where('user_id', $target->id)
             ->firstOrFail();
 
-        $role = UserRole::from($request->validated('role'));
-
-        if ($membership->role === UserRole::Owner) {
-            $owners = ClubMembership::query()
-                ->where('club_id', $membership->club_id)
-                ->where('role', UserRole::Owner)
-                ->count();
-
-            if ($owners <= 1) {
-                throw ValidationException::withMessages([
-                    'role' => 'Câu lạc bộ cần ít nhất một chủ.',
-                ]);
-            }
+        if (! $request->user()->canChangeMembershipRole($membership)) {
+            throw ValidationException::withMessages([
+                'role' => match (true) {
+                    $target->id === $request->user()->id => 'Bạn không thể đổi quyền của chính mình.',
+                    $membership->role === UserRole::Owner => 'Không đổi được quyền của chủ CLB.',
+                    default => 'Chỉ người tạo CLB đổi được quyền quản trị viên.',
+                },
+            ]);
         }
 
-        $membership->role = $role;
+        $membership->role = UserRole::from($request->validated('role'));
         $membership->save();
 
-        return to_route('settings');
+        return to_route('members.index');
     }
 }

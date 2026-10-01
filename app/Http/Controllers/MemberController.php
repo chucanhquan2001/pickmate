@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ResolvesClubModels;
 use App\Http\Requests\UpdateMemberRequest;
+use App\Models\ClubMembership;
 use App\Models\MatchGame;
 use App\Models\Member;
 use App\Support\Records;
@@ -34,8 +35,23 @@ class MemberController extends Controller
             ->when(is_string($status) && $status !== '', fn ($query) => $query->where('status', $status))
             ->orderBy('name')
             ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Member $member) => Records::member($member));
+            ->withQueryString();
+
+        $actor = $request->user();
+        $memberships = ClubMembership::query()
+            ->where('club_id', $actor->club_id)
+            ->whereIn('user_id', $members->getCollection()->pluck('user_id')->filter())
+            ->get()
+            ->keyBy('user_id');
+
+        $members->through(function (Member $member) use ($memberships, $actor) {
+            $data = Records::member($member);
+            $membership = $member->user_id === null ? null : $memberships->get($member->user_id);
+            $data['account_role'] = $membership?->role?->value;
+            $data['can_change_role'] = $membership !== null && $actor->canChangeMembershipRole($membership);
+
+            return $data;
+        });
 
         return Inertia::render('Members/Index', [
             'members' => $members,

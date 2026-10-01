@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\MemberGender;
-use App\Enums\MemberLevel;
 use App\Enums\MemberStatus;
 use App\Models\Club;
 use App\Models\Member;
@@ -28,7 +27,8 @@ class MemberFactory extends Factory
             'birthday' => fake()->optional()->date(),
             'phone' => fake()->optional()->phoneNumber(),
             'email' => null,
-            'level' => MemberLevel::Beginner,
+            'dupr_rating' => '2.0',
+            'spcn_rating' => '2.0',
             'joined_at' => now()->toDateString(),
             'status' => MemberStatus::Active,
         ];

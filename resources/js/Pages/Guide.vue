@@ -61,7 +61,7 @@ const steps = computed(() => {
             title: 'Mời người chơi',
             body: 'Cài đặt hiện mã QR của CLB. Người đã đăng nhập quét mã và gửi lời xin. Chủ hoặc admin duyệt thì họ thành thành viên và mới được chọn vào minigame.',
             href: canManage.value ? '/join-requests' : '/members',
-            action: canManage.value ? 'Duyệt lời xin' : 'Xem thành viên',
+            action: canManage.value ? `Duyệt lời xin (${page.props.pendingJoinRequests ?? 0})` : 'Xem thành viên',
         },
         {
             title: 'Thêm sân nếu cần',

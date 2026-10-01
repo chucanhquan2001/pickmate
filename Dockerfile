@@ -16,7 +16,9 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --prefer-dist --no-interaction --no-scripts --no-autoloader
 
 COPY . .
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts
+RUN rm -f bootstrap/cache/packages.php bootstrap/cache/services.php \
+    && composer dump-autoload --optimize --no-dev --classmap-authoritative --no-scripts \
+    && php artisan package:discover --ansi
 
 FROM php:8.3-fpm-bookworm
 
@@ -32,7 +34,8 @@ COPY docker/nginx/default.conf /etc/nginx/sites-available/default
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/entrypoint.sh /entrypoint.sh
 
-RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
+RUN sed -i 's/\r$//' /entrypoint.sh \
+    && ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default \
     && chmod +x /entrypoint.sh
 
 COPY --from=vendor /app /var/www/html

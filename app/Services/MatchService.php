@@ -20,7 +20,7 @@ class MatchService
     public function __construct(private RankingService $rankings) {}
 
     /**
-     * @param  array{scheduled_at: string, court_id?: int|null, team_1: list<int>, team_2: list<int>}  $data
+     * @param  array{scheduled_at: string, court_id?: int|null, scoring_type: string, team_1: list<int>, team_2: list<int>}  $data
      */
     public function create(Minigame $minigame, User $actor, array $data): MatchGame
     {
@@ -33,6 +33,7 @@ class MatchService
                 'minigame_id' => $minigame->id,
                 'court_id' => $court?->id,
                 'status' => MatchStatus::Scheduled,
+                'scoring_type' => $data['scoring_type'],
                 'scheduled_at' => $data['scheduled_at'],
                 'created_by' => $actor->id,
             ]);

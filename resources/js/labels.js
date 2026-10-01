@@ -1,3 +1,8 @@
+export const scoringTypes = {
+    side_out: 'Side-out (truyền thống)',
+    rally: 'Rally (theo pha bóng)',
+};
+
 export const formats = {
     single_male: 'Đơn nam',
     single_female: 'Đơn nữ',
@@ -24,16 +29,33 @@ export const genders = {
     female: 'Nữ',
 };
 
-export const levels = {
-    beginner: 'Mới chơi',
-    intermediate: 'Trung bình',
-    advanced: 'Nâng cao',
+export const stakeFormats = {
+    single: 'Đơn',
+    double: 'Đôi',
 };
 
+export function skillLabel(dupr, spcn) {
+    const one = (value) => {
+        if (value === null || value === undefined || value === '') {
+            return '—';
+        }
+
+        const number = Number(value);
+
+        return Number.isFinite(number) ? number.toFixed(1) : String(value);
+    };
+
+    return `DUPR ${one(dupr)} · SPCN ${one(spcn)}`;
+}
+
+export function formatVnd(value) {
+    return `${new Intl.NumberFormat('vi-VN').format(Number(value) || 0)} đ`;
+}
+
 export const roles = {
-    owner: 'Owner',
-    admin: 'Admin',
-    member: 'Member',
+    owner: 'Chủ CLB',
+    admin: 'Quản trị viên',
+    member: 'Thành viên',
 };
 
 export function label(map, value) {
@@ -55,6 +77,10 @@ export function formatWhen(value) {
 
 export function teamLabel(players) {
     return players?.map((player) => player.name).filter(Boolean).join(' / ') || 'Chưa chọn';
+}
+
+export function rulesSummary(minigame) {
+    return `Thắng +${minigame.win_points} · Thua +${minigame.loss_points} · Tham gia +${minigame.participation_points}`;
 }
 
 export function errorText(value) {

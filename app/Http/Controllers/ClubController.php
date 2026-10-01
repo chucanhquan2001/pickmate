@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\JoinRequestStatus;
+use App\Enums\UserRole;
 use App\Http\Controllers\Concerns\ResolvesClubModels;
 use App\Http\Requests\UpdateClubRequest;
-use App\Models\ClubMembership;
 use App\Services\ClubService;
 use App\Support\Records;
 use Illuminate\Http\RedirectResponse;
@@ -20,22 +21,29 @@ class ClubController extends Controller
     public function edit(Request $request): Response
     {
         $club = $this->club($request);
-        $users = $request->user()->isOwner()
-            ? ClubMembership::query()
-                ->where('club_id', $club->id)
-                ->with('user')
-                ->orderBy('id')
-                ->get()
-                ->map(fn (ClubMembership $membership) => Records::user($membership->user, $membership->role))
-                ->values()
-            : [];
 
         return Inertia::render('Settings/Club', [
             'club' => Records::club($club),
-            'users' => $users,
             'inviteUrl' => $request->user()->canManageClub()
                 ? route('join.show', ['token' => $club->invite_token])
                 : null,
+        ]);
+    }
+
+    public function manage(Request $request): Response
+    {
+        abort_unless($request->user()->canManageClub(), 403);
+
+        $club = $this->club($request);
+
+        return Inertia::render('Manage/Index', [
+            'clubName' => $club->name,
+            'counts' => [
+                'members' => $club->members()->count(),
+                'pending_requests' => $club->joinRequests()->where('status', JoinRequestStatus::Pending)->count(),
+                'courts' => $club->courts()->count(),
+                'admins' => $club->memberships()->where('role', UserRole::Admin)->count(),
+            ],
         ]);
     }
 
@@ -53,12 +61,24 @@ class ClubController extends Controller
         return to_route('settings');
     }
 
+    public function invite(Request $request, ClubService $clubs): Response
+    {
+        abort_unless($request->user()->canManageClub(), 403);
+
+        $club = $clubs->ensureInvite($this->club($request));
+
+        return Inertia::render('Clubs/Invite', [
+            'clubName' => $club->name,
+            'inviteUrl' => route('join.show', ['token' => $club->invite_token]),
+        ]);
+    }
+
     public function rotateInvite(Request $request, ClubService $clubs): RedirectResponse
     {
         abort_unless($request->user()->isOwner(), 403);
 
         $clubs->rotateInvite($this->club($request));
 
-        return to_route('settings');
+        return to_route('invite');
     }
 }

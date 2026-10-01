@@ -1,8 +1,9 @@
 <script setup>
-import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import { errorText, genders, label, levels, roles } from '../../labels';
+import SkillRatings from '../../Components/SkillRatings.vue';
+import { errorText, genders, label, roles } from '../../labels';
 
 defineProps({
     memberships: { type: Array, required: true },
@@ -14,7 +15,8 @@ const form = useForm({
     name: '',
     nickname: '',
     gender: 'male',
-    level: 'beginner',
+    dupr_rating: '',
+    spcn_rating: '',
 });
 
 function createClub() {
@@ -37,6 +39,11 @@ function switchClub(clubId) {
                 <p class="font-semibold">{{ membership.name }}</p>
                 <p class="text-sm text-stone-500">{{ label(roles, membership.role) }}</p>
                 <p v-if="membership.current" class="mt-2 text-sm font-semibold text-teal-700">Đang dùng</p>
+                <Link
+                    v-if="membership.current && (membership.role === 'owner' || membership.role === 'admin')"
+                    href="/invite"
+                    class="mt-3 flex min-h-11 items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white"
+                >Mã QR mời vào CLB</Link>
                 <button
                     v-else
                     type="button"
@@ -70,11 +77,7 @@ function switchClub(clubId) {
                     <option v-for="(name, value) in genders" :key="value" :value="value">{{ name }}</option>
                 </select>
             </label>
-            <label class="block text-sm font-semibold">Trình độ
-                <select v-model="form.level" class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal">
-                    <option v-for="(name, value) in levels" :key="value" :value="value">{{ label(levels, value) }}</option>
-                </select>
-            </label>
+            <SkillRatings v-model:dupr="form.dupr_rating" v-model:spcn="form.spcn_rating" :errors="form.errors" />
             <p v-if="form.errors.gender" class="text-sm text-red-700">{{ errorText(form.errors.gender) }}</p>
             <button class="flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white" :disabled="form.processing">Tạo CLB</button>
         </form>

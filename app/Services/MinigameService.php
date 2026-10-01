@@ -16,7 +16,7 @@ class MinigameService
     public function __construct(private RankingService $rankings) {}
 
     /**
-     * @param  array{name: string, description?: string|null, format: string, starts_at?: string|null, ends_at?: string|null}  $data
+     * @param  array{name: string, description?: string|null, format: string, starts_at?: string|null, ends_at?: string|null, default_score?: int, best_of?: int, participation_points?: int, win_points?: int, loss_points?: int, clean_win_bonus?: int}  $data
      */
     public function create(Club $club, User $actor, array $data): Minigame
     {
@@ -28,12 +28,12 @@ class MinigameService
             'status' => MinigameStatus::Draft,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
-            'default_score' => $club->default_score,
-            'best_of' => $club->default_best_of,
-            'participation_points' => $club->default_participation_points,
-            'win_points' => $club->default_win_points,
-            'loss_points' => $club->default_loss_points,
-            'clean_win_bonus' => $club->default_clean_win_bonus,
+            'default_score' => $data['default_score'] ?? $club->default_score,
+            'best_of' => $data['best_of'] ?? $club->default_best_of,
+            'participation_points' => $data['participation_points'] ?? $club->default_participation_points,
+            'win_points' => $data['win_points'] ?? $club->default_win_points,
+            'loss_points' => $data['loss_points'] ?? $club->default_loss_points,
+            'clean_win_bonus' => $data['clean_win_bonus'] ?? $club->default_clean_win_bonus,
             'created_by' => $actor->id,
         ]);
     }
@@ -46,9 +46,9 @@ class MinigameService
         $this->assertOpen($minigame);
 
         if (array_key_exists('format', $data) && $data['format'] !== $minigame->format->value) {
-            if ($minigame->status !== MinigameStatus::Draft || $minigame->matches()->exists()) {
+            if ($minigame->matches()->exists()) {
                 throw ValidationException::withMessages([
-                    'format' => 'Format can only change on a draft minigame that has no matches.',
+                    'format' => 'Đã có trận thì không đổi được thể thức.',
                 ]);
             }
 
@@ -168,7 +168,7 @@ class MinigameService
         foreach ($minigame->members as $member) {
             if (! $minigame->format->allows($member->gender)) {
                 throw ValidationException::withMessages([
-                    'format' => 'The current roster does not match the new format.',
+                    'format' => 'Roster hiện tại không khớp thể thức mới.',
                 ]);
             }
         }

@@ -2,11 +2,10 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import InviteQr from '../../Components/InviteQr.vue';
-import { errorText, roles, label } from '../../labels';
+import { errorText } from '../../labels';
 
 const props = defineProps({
     club: { type: Object, required: true },
-    users: { type: Array, required: true },
     inviteUrl: { type: String, default: null },
 });
 
@@ -27,10 +26,6 @@ function saveClub() {
     form.put('/settings');
 }
 
-function changeRole(user, role) {
-    router.patch(`/settings/users/${user.id}`, { role });
-}
-
 function rotateInvite() {
     router.post('/settings/invite');
 }
@@ -41,13 +36,17 @@ function rotateInvite() {
     <AppLayout>
         <h1 class="text-2xl font-semibold">Cài đặt CLB</h1>
         <p class="mt-1 text-sm text-stone-500">{{ club.name }}</p>
-        <Link href="/courts" class="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-white font-semibold">Quản lý sân</Link>
-        <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-white font-semibold">Duyệt lời xin</Link>
+        <Link v-if="inviteUrl" href="/invite" class="mt-4 flex min-h-12 items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white">Mã QR mời vào CLB</Link>
+        <Link href="/courts" class="mt-2 flex min-h-12 items-center justify-center rounded-2xl bg-white font-semibold">Quản lý sân</Link>
+        <Link v-if="page.props.auth.user.can_manage" href="/join-requests" class="mt-2 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold">
+            Duyệt lời xin
+            <span class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-teal-700 px-2 text-xs text-white">{{ page.props.pendingJoinRequests }}</span>
+        </Link>
 
         <section v-if="inviteUrl" class="mt-6 rounded-3xl bg-white p-4">
             <h2 class="font-semibold">Mời vào CLB</h2>
             <p class="mt-1 text-sm text-stone-500">Người khác quét mã này bằng camera điện thoại, đăng nhập, rồi chờ duyệt.</p>
-            <InviteQr :value="inviteUrl" class="mt-4" />
+            <InviteQr :value="inviteUrl" :name="club.name" class="mt-4" />
             <p class="mt-3 break-all text-sm text-stone-600">{{ inviteUrl }}</p>
             <button v-if="page.props.auth.user.is_owner" type="button" class="mt-4 flex min-h-11 w-full items-center justify-center rounded-2xl bg-stone-100 font-semibold" @click="rotateInvite">Tạo mã mới</button>
         </section>
@@ -91,17 +90,5 @@ function rotateInvite() {
             <p v-if="form.errors.name" class="text-sm text-red-700">{{ errorText(form.errors.name) }}</p>
             <button class="flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white" :disabled="form.processing">Lưu CLB</button>
         </form>
-
-        <section v-if="page.props.auth.user.is_owner" class="mt-8 space-y-2">
-            <h2 class="font-semibold">Người dùng</h2>
-            <article v-for="user in users" :key="user.id" class="rounded-2xl bg-white p-3">
-                <p class="font-semibold">{{ user.name }}</p>
-                <p class="text-sm text-stone-500">{{ user.email }} · {{ label(roles, user.role) }}</p>
-                <div v-if="user.id !== page.props.auth.user.id" class="mt-2 grid grid-cols-2 gap-2">
-                    <button type="button" class="rounded-xl bg-stone-100 py-2 text-sm font-semibold" @click="changeRole(user, 'admin')">Admin</button>
-                    <button type="button" class="rounded-xl bg-stone-100 py-2 text-sm font-semibold" @click="changeRole(user, 'member')">Member</button>
-                </div>
-            </article>
-        </section>
     </AppLayout>
 </template>

@@ -2,7 +2,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import StatusBadge from '../../Components/StatusBadge.vue';
-import { errorText, formatWhen, teamLabel } from '../../labels';
+import { errorText, formatWhen, label, scoringTypes, teamLabel } from '../../labels';
 
 const props = defineProps({
     minigame: { type: Object, required: true },
@@ -41,6 +41,7 @@ function save() {
             <p class="text-lg font-semibold">{{ teamLabel(match.team_1) }}</p>
             <p class="my-2 text-center text-sm text-stone-400">VS</p>
             <p class="text-lg font-semibold">{{ teamLabel(match.team_2) }}</p>
+            <p class="mt-3 text-sm text-stone-500">{{ label(scoringTypes, match.scoring_type) }}</p>
             <p v-if="match.winner_team" class="mt-3 text-sm font-semibold text-teal-700">Đội {{ match.winner_team }} thắng</p>
             <ul class="mt-3 space-y-1 text-sm">
                 <li v-for="set in match.sets" :key="set.set_number">Set {{ set.set_number }}: {{ set.team_1_score }} - {{ set.team_2_score }}</li>

@@ -72,6 +72,11 @@ class Club extends Model
         return $this->hasMany(Minigame::class);
     }
 
+    public function stakeMatches(): HasMany
+    {
+        return $this->hasMany(StakeMatch::class);
+    }
+
     public function memberships(): HasMany
     {
         return $this->hasMany(ClubMembership::class);

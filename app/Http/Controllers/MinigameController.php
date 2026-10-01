@@ -44,7 +44,18 @@ class MinigameController extends Controller
     {
         abort_unless($request->user()->canManageClub(), 403);
 
-        return Inertia::render('Minigames/Create');
+        $club = $this->club($request);
+
+        return Inertia::render('Minigames/Create', [
+            'clubDefaults' => [
+                'default_score' => $club->default_score,
+                'best_of' => $club->default_best_of,
+                'participation_points' => $club->default_participation_points,
+                'win_points' => $club->default_win_points,
+                'loss_points' => $club->default_loss_points,
+                'clean_win_bonus' => $club->default_clean_win_bonus,
+            ],
+        ]);
     }
 
     public function store(StoreMinigameRequest $request, CurrentMinigame $current): RedirectResponse

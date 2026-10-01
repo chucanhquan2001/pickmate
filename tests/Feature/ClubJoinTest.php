@@ -12,6 +12,22 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
+it('rejects a skill rating that is not one decimal place', function () {
+    $user = User::factory()->create([
+        'club_id' => null,
+        'role' => UserRole::Member,
+    ]);
+
+    $this->actingAs($user)->post('/clubs', [
+        'name' => 'CLB Sai',
+        'gender' => 'male',
+        'dupr_rating' => '2',
+        'spcn_rating' => '2.50',
+    ])->assertSessionHasErrors(['dupr_rating', 'spcn_rating']);
+
+    expect(Club::query()->where('name', 'CLB Sai')->exists())->toBeFalse();
+});
+
 it('creates a private club and makes the creator its owner and member', function () {
     $user = User::factory()->create([
         'club_id' => null,
@@ -22,16 +38,21 @@ it('creates a private club and makes the creator its owner and member', function
         'name' => 'CLB Rieng',
         'nickname' => 'Ri',
         'gender' => 'female',
-        'level' => 'advanced',
+        'dupr_rating' => '5.0',
+        'spcn_rating' => '4.5',
     ])->assertRedirect(route('dashboard'));
 
     $user->refresh();
     $club = Club::query()->findOrFail($user->club_id);
 
+    $member = Member::query()->where('club_id', $club->id)->where('user_id', $user->id)->firstOrFail();
+
     expect($user->isOwner())->toBeTrue()
         ->and($club->name)->toBe('CLB Rieng')
         ->and($club->invite_token)->not->toBeEmpty()
-        ->and(Member::query()->where('club_id', $club->id)->where('user_id', $user->id)->where('gender', 'female')->exists())->toBeTrue();
+        ->and($member->gender->value)->toBe('female')
+        ->and($member->dupr_rating)->toBe('5.0')
+        ->and($member->spcn_rating)->toBe('4.5');
 
     $this->actingAs($user)->get('/minigames/create')
         ->assertOk()
@@ -53,7 +74,8 @@ it('keeps a join request pending until an owner approves it', function () {
     $this->actingAs($applicant)->post('/join/'.$club->invite_token, [
         'gender' => 'male',
         'nickname' => 'Xin',
-        'level' => 'beginner',
+        'dupr_rating' => '2.0',
+        'spcn_rating' => '2.5',
     ])->assertRedirect(route('join.show', ['token' => $club->invite_token]));
 
     expect(Member::query()->where('user_id', $applicant->id)->exists())->toBeFalse()
@@ -67,8 +89,12 @@ it('keeps a join request pending until an owner approves it', function () {
             ->component('Clubs/Join')
             ->where('state', 'pending'));
 
+    $this->actingAs($owner)->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('pendingJoinRequests', 1));
+
     $this->actingAs($owner)->post("/join-requests/{$joinRequest->id}/approve")
-        ->assertRedirect(route('join-requests.index'));
+        ->assertRedirect(route('members.index'));
 
     $applicant->refresh();
     $member = Member::query()->where('user_id', $applicant->id)->firstOrFail();
@@ -77,6 +103,8 @@ it('keeps a join request pending until an owner approves it', function () {
         ->and($member->club_id)->toBe($club->id)
         ->and($member->name)->toBe('Nguoi Xin')
         ->and($member->nickname)->toBe('Xin')
+        ->and($member->dupr_rating)->toBe('2.0')
+        ->and($member->spcn_rating)->toBe('2.5')
         ->and($applicant->club_id)->toBe($club->id)
         ->and(ClubMembership::query()->where('user_id', $applicant->id)->where('club_id', $club->id)->first()->role)->toBe(UserRole::Member);
 });
@@ -91,6 +119,8 @@ it('rejects a join request without creating a member and allows another request'
 
     $this->actingAs($applicant)->post('/join/'.$club->invite_token, [
         'gender' => 'male',
+        'dupr_rating' => '3.0',
+        'spcn_rating' => '3.0',
     ])->assertRedirect();
 
     $joinRequest = ClubJoinRequest::query()->where('user_id', $applicant->id)->firstOrFail();
@@ -103,7 +133,8 @@ it('rejects a join request without creating a member and allows another request'
 
     $this->actingAs($applicant)->post('/join/'.$club->invite_token, [
         'gender' => 'female',
-        'level' => 'intermediate',
+        'dupr_rating' => '3.5',
+        'spcn_rating' => '3.5',
     ])->assertRedirect();
 
     expect(ClubJoinRequest::query()->where('user_id', $applicant->id)->where('status', JoinRequestStatus::Pending)->exists())->toBeTrue()
@@ -142,7 +173,8 @@ it('switches the active club and only offers that club\'s members to a minigame'
     $this->actingAs($owner)->post('/clubs', [
         'name' => 'CLB Hai',
         'gender' => 'male',
-        'level' => 'beginner',
+        'dupr_rating' => '2.0',
+        'spcn_rating' => '2.0',
     ])->assertRedirect(route('dashboard'));
 
     $owner->refresh();
@@ -182,8 +214,15 @@ it('lets only the owner replace the invite token', function () {
     $club = Club::query()->firstOrFail();
     $previous = $club->invite_token;
 
+    $this->actingAs($member)->get('/invite')->assertForbidden();
+    $this->actingAs($owner)->get('/invite')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Clubs/Invite')
+            ->where('inviteUrl', route('join.show', ['token' => $previous])));
+
     $this->actingAs($member)->post('/settings/invite')->assertForbidden();
-    $this->actingAs($owner)->post('/settings/invite')->assertRedirect(route('settings'));
+    $this->actingAs($owner)->post('/settings/invite')->assertRedirect(route('invite'));
 
     expect($club->refresh()->invite_token)->not->toBe($previous);
 

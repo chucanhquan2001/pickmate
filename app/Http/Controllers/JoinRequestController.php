@@ -36,7 +36,7 @@ class JoinRequestController extends Controller
         abort_unless($request->user()->canManageClub(), 403);
         $clubs->approve($request->user(), $joinRequest);
 
-        return to_route('join-requests.index');
+        return to_route('members.index');
     }
 
     public function reject(Request $request, ClubJoinRequest $joinRequest, ClubService $clubs): RedirectResponse

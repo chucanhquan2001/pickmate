@@ -1,7 +1,7 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
-import { genders, label, levels } from '../../labels';
+import { genders, label, skillLabel } from '../../labels';
 
 defineProps({
     requests: { type: Array, required: true },
@@ -26,7 +26,7 @@ function reject(id) {
                 <p class="text-sm text-stone-500">
                     {{ request.nickname || request.email || 'Chưa có email' }}
                     · {{ label(genders, request.gender) }}
-                    · {{ label(levels, request.level) }}
+                    · {{ skillLabel(request.dupr_rating, request.spcn_rating) }}
                 </p>
                 <div class="mt-3 grid grid-cols-2 gap-2">
                     <button type="button" class="min-h-11 rounded-2xl bg-teal-700 font-semibold text-white" @click="approve(request.id)">Duyệt</button>

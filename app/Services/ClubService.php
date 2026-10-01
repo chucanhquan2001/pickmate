@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\ClubStatus;
 use App\Enums\JoinRequestStatus;
-use App\Enums\MemberLevel;
 use App\Enums\MemberStatus;
 use App\Enums\UserRole;
 use App\Models\Club;
@@ -19,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 class ClubService
 {
     /**
-     * @param  array{name: string, nickname?: string|null, gender: string, level?: string|null}  $data
+     * @param  array{name: string, nickname?: string|null, gender: string, dupr_rating: string, spcn_rating: string}  $data
      */
     public function create(User $user, array $data): Club
     {
@@ -50,7 +49,8 @@ class ClubService
                 'avatar' => $user->avatar,
                 'gender' => $data['gender'],
                 'email' => $user->email,
-                'level' => $data['level'] ?? MemberLevel::Beginner->value,
+                'dupr_rating' => $data['dupr_rating'],
+                'spcn_rating' => $data['spcn_rating'],
                 'joined_at' => now()->toDateString(),
                 'status' => MemberStatus::Active,
             ]);
@@ -77,6 +77,15 @@ class ClubService
         $user->save();
     }
 
+    public function ensureInvite(Club $club): Club
+    {
+        if (! is_string($club->invite_token) || $club->invite_token === '') {
+            return $this->rotateInvite($club);
+        }
+
+        return $club;
+    }
+
     public function rotateInvite(Club $club): Club
     {
         $club->invite_token = $this->token();
@@ -86,7 +95,7 @@ class ClubService
     }
 
     /**
-     * @param  array{gender: string, nickname?: string|null, level?: string|null}  $data
+     * @param  array{gender: string, nickname?: string|null, dupr_rating: string, spcn_rating: string}  $data
      */
     public function requestJoin(User $user, Club $club, array $data): ClubJoinRequest
     {
@@ -117,7 +126,8 @@ class ClubService
                 'user_id' => $user->id,
                 'gender' => $data['gender'],
                 'nickname' => $data['nickname'] ?? null,
-                'level' => $data['level'] ?? MemberLevel::Beginner->value,
+                'dupr_rating' => $data['dupr_rating'],
+                'spcn_rating' => $data['spcn_rating'],
                 'status' => JoinRequestStatus::Pending,
             ]);
         });
@@ -209,7 +219,8 @@ class ClubService
             'avatar' => $applicant->avatar,
             'gender' => $joinRequest->gender,
             'email' => $applicant->email,
-            'level' => $joinRequest->level,
+            'dupr_rating' => $joinRequest->dupr_rating,
+            'spcn_rating' => $joinRequest->spcn_rating,
             'status' => MemberStatus::Active,
         ];
 

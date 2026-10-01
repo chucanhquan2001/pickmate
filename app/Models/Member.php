@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\MemberGender;
-use App\Enums\MemberLevel;
 use App\Enums\MemberStatus;
 use Database\Factories\MemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +26,8 @@ class Member extends Model
         'birthday',
         'phone',
         'email',
-        'level',
+        'dupr_rating',
+        'spcn_rating',
         'joined_at',
         'status',
     ];
@@ -36,7 +36,8 @@ class Member extends Model
     {
         return [
             'gender' => MemberGender::class,
-            'level' => MemberLevel::class,
+            'dupr_rating' => 'decimal:1',
+            'spcn_rating' => 'decimal:1',
             'status' => MemberStatus::class,
             'birthday' => 'date',
             'joined_at' => 'date',

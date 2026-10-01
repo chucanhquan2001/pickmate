@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -31,14 +31,81 @@ const items = computed(() => [
     { name: 'Members', href: '/members', icon: 'people' },
 ]);
 
-function active(href) {
-    const path = page.url.split('?')[0];
+const path = computed(() => page.url.split('?')[0]);
 
-    if (href === '/dashboard') {
-        return path === '/' || path === '/dashboard';
+const showBack = computed(() => {
+    const currentPath = path.value;
+
+    if (currentPath === '/' || currentPath === '/dashboard' || currentPath === '/minigames' || currentPath === '/members' || currentPath === '/keo') {
+        return false;
     }
 
-    return path === href || path.startsWith(`${href}/`);
+    return !(current.value && currentPath === `/minigames/${current.value.id}/rankings`);
+});
+
+const fallbackHref = computed(() => {
+    const currentPath = path.value;
+    const minigame = currentPath.match(/^\/minigames\/(\d+)/);
+    const match = currentPath.match(/^\/minigames\/(\d+)\/matches\/(\d+)/);
+
+    if (currentPath.startsWith('/members/')) {
+        return '/members';
+    }
+
+    if (currentPath.startsWith('/keo/')) {
+        return '/keo';
+    }
+
+    if (currentPath === '/minigames/create') {
+        return '/minigames';
+    }
+
+    if (match && currentPath.endsWith('/result')) {
+        return `/minigames/${match[1]}/matches/${match[2]}`;
+    }
+
+    if (minigame && currentPath.endsWith('/matches/create')) {
+        return `/minigames/${minigame[1]}/matches`;
+    }
+
+    if (match) {
+        return `/minigames/${match[1]}/matches`;
+    }
+
+    if (minigame && (currentPath.endsWith('/roster') || currentPath.endsWith('/rules') || currentPath.endsWith('/matches'))) {
+        return `/minigames/${minigame[1]}`;
+    }
+
+    if (minigame) {
+        return '/minigames';
+    }
+
+    if (currentPath === '/manage') {
+        return '/dashboard';
+    }
+
+    if (['/settings', '/courts', '/invite', '/join-requests'].includes(currentPath) && user.value?.can_manage) {
+        return '/manage';
+    }
+
+    return '/dashboard';
+});
+
+function active(href) {
+    if (href === '/dashboard') {
+        return path.value === '/' || path.value === '/dashboard';
+    }
+
+    return path.value === href || path.value.startsWith(`${href}/`);
+}
+
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+        return;
+    }
+
+    router.visit(fallbackHref.value);
 }
 </script>
 
@@ -52,12 +119,14 @@ function active(href) {
             </div>
             <div class="flex shrink-0 items-center gap-1">
                 <Link href="/guide" class="rounded-full px-3 py-2 text-sm font-semibold text-teal-700">Hướng dẫn</Link>
+                <Link v-if="user?.can_manage" href="/manage" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Quản lý</Link>
                 <Link href="/settings" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Cài đặt</Link>
                 <Link href="/logout" method="post" as="button" class="rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-700">Thoát</Link>
             </div>
         </header>
 
         <main class="px-4">
+            <button v-if="showBack" type="button" class="mb-3 text-sm font-semibold text-teal-700" @click="goBack">Quay lại</button>
             <slot />
         </main>
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\JoinRequestStatus;
 use App\Support\CurrentMinigame;
 use App\Support\Records;
 use Illuminate\Http\Request;
@@ -33,6 +34,9 @@ class HandleInertiaRequests extends Middleware
                 'name' => $club->name,
             ] : null,
             'currentMinigame' => $minigame ? Records::summary($minigame) : null,
+            'pendingJoinRequests' => $user && $club && $user->canManageClub()
+                ? $club->joinRequests()->where('status', JoinRequestStatus::Pending)->count()
+                : 0,
         ];
     }
 }

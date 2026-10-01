@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Enums\JoinRequestStatus;
 use App\Enums\MemberGender;
-use App\Enums\MemberLevel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,7 +14,8 @@ class ClubJoinRequest extends Model
         'user_id',
         'gender',
         'nickname',
-        'level',
+        'dupr_rating',
+        'spcn_rating',
         'status',
         'reviewed_by',
         'reviewed_at',
@@ -25,7 +25,8 @@ class ClubJoinRequest extends Model
     {
         return [
             'gender' => MemberGender::class,
-            'level' => MemberLevel::class,
+            'dupr_rating' => 'decimal:1',
+            'spcn_rating' => 'decimal:1',
             'status' => JoinRequestStatus::class,
             'reviewed_at' => 'datetime',
         ];

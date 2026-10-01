@@ -3,8 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\MemberGender;
-use App\Enums\MemberLevel;
 use App\Enums\MemberStatus;
+use App\Rules\SkillRating;
 use Illuminate\Validation\Rule;
 
 class UpdateMemberRequest extends ClubWriteRequest
@@ -14,6 +14,8 @@ class UpdateMemberRequest extends ClubWriteRequest
         if ($this->exists('email') && $this->input('email') === '') {
             $this->merge(['email' => null]);
         }
+
+        $this->merge(SkillRating::trimmed($this));
     }
 
     /**
@@ -36,7 +38,8 @@ class UpdateMemberRequest extends ClubWriteRequest
                     ->where(fn ($query) => $query->where('club_id', $this->user()->club_id))
                     ->ignore($this->route('member')),
             ],
-            'level' => ['nullable', Rule::enum(MemberLevel::class)],
+            'dupr_rating' => ['required', new SkillRating],
+            'spcn_rating' => ['required', new SkillRating],
             'joined_at' => ['nullable', 'date'],
             'status' => ['nullable', Rule::enum(MemberStatus::class)],
         ];

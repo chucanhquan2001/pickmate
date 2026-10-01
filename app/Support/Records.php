@@ -11,6 +11,8 @@ use App\Models\MatchPlayer;
 use App\Models\Member;
 use App\Models\Minigame;
 use App\Models\Ranking;
+use App\Models\StakeMatch;
+use App\Models\StakeMatchPlayer;
 use App\Models\User;
 
 class Records
@@ -50,7 +52,8 @@ class Records
             'avatar' => $joinRequest->user->avatar,
             'nickname' => $joinRequest->nickname,
             'gender' => $joinRequest->gender->value,
-            'level' => $joinRequest->level->value,
+            'dupr_rating' => $joinRequest->dupr_rating,
+            'spcn_rating' => $joinRequest->spcn_rating,
             'status' => $joinRequest->status->value,
         ];
     }
@@ -93,7 +96,8 @@ class Records
             'birthday' => $member->birthday?->toDateString(),
             'phone' => $member->phone,
             'email' => $member->email,
-            'level' => $member->level->value,
+            'dupr_rating' => $member->dupr_rating,
+            'spcn_rating' => $member->spcn_rating,
             'joined_at' => $member->joined_at?->toDateString(),
             'status' => $member->status->value,
         ];
@@ -219,6 +223,7 @@ class Records
                 ? self::court($match->court)
                 : null,
             'status' => $match->status->value,
+            'scoring_type' => $match->scoring_type?->value ?? 'side_out',
             'scheduled_at' => $match->scheduled_at?->toIso8601String(),
             'started_at' => $match->started_at?->toIso8601String(),
             'completed_at' => $match->completed_at?->toIso8601String(),
@@ -238,6 +243,29 @@ class Records
     /**
      * @return array<string, mixed>
      */
+    public static function stakeMatch(StakeMatch $match): array
+    {
+        return [
+            'id' => $match->id,
+            'format' => $match->format->value,
+            'scoring_type' => $match->scoring_type?->value ?? 'side_out',
+            'scheduled_at' => $match->scheduled_at?->toIso8601String(),
+            'item' => $match->item,
+            'quantity' => $match->quantity,
+            'expected_amount' => $match->expected_amount,
+            'team_1_score' => $match->team_1_score,
+            'team_2_score' => $match->team_2_score,
+            'court' => $match->relationLoaded('court') && $match->court !== null
+                ? self::court($match->court)
+                : null,
+            'team_1' => self::stakeTeam($match, 1),
+            'team_2' => self::stakeTeam($match, 2),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public static function ranking(Ranking $ranking): array
     {
         return [
@@ -250,6 +278,27 @@ class Records
             'win_rate' => $ranking->winRate(),
             'points' => $ranking->points,
         ];
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private static function stakeTeam(StakeMatch $match, int $team): array
+    {
+        if (! $match->relationLoaded('players')) {
+            return [];
+        }
+
+        return $match->players
+            ->where('team', $team)
+            ->sortBy('position')
+            ->map(fn (StakeMatchPlayer $player) => [
+                'member_id' => $player->member_id,
+                'name' => $player->member?->name,
+                'position' => $player->position,
+            ])
+            ->values()
+            ->all();
     }
 
     /**

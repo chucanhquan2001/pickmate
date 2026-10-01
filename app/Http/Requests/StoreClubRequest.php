@@ -3,8 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\MemberGender;
-use App\Enums\MemberLevel;
 use App\Enums\UserStatus;
+use App\Rules\SkillRating;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,6 +22,8 @@ class StoreClubRequest extends FormRequest
         if ($this->input('nickname') === '') {
             $this->merge(['nickname' => null]);
         }
+
+        $this->merge(SkillRating::trimmed($this));
     }
 
     /**
@@ -33,7 +35,8 @@ class StoreClubRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'nickname' => ['nullable', 'string', 'max:255'],
             'gender' => ['required', Rule::enum(MemberGender::class)],
-            'level' => ['nullable', Rule::enum(MemberLevel::class)],
+            'dupr_rating' => ['required', new SkillRating],
+            'spcn_rating' => ['required', new SkillRating],
         ];
     }
 }

@@ -1,7 +1,12 @@
 <script setup>
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import MinigameRulesFields from '../../Components/MinigameRulesFields.vue';
 import { errorText, formats } from '../../labels';
+
+const props = defineProps({
+    clubDefaults: { type: Object, required: true },
+});
 
 const page = usePage();
 
@@ -9,6 +14,12 @@ const form = useForm({
     name: '',
     description: '',
     format: 'double_male',
+    default_score: props.clubDefaults.default_score,
+    best_of: props.clubDefaults.best_of,
+    participation_points: props.clubDefaults.participation_points,
+    win_points: props.clubDefaults.win_points,
+    loss_points: props.clubDefaults.loss_points,
+    clean_win_bonus: props.clubDefaults.clean_win_bonus,
 });
 
 function submit() {
@@ -34,6 +45,15 @@ function submit() {
             <label class="block text-sm font-semibold">Mô tả
                 <textarea v-model="form.description" rows="3" class="mt-1 w-full rounded-2xl border border-stone-300 bg-white px-4 py-3 text-base font-normal" />
             </label>
+
+            <section class="space-y-3 pt-2">
+                <div>
+                    <h2 class="font-semibold">Quy chế tính điểm</h2>
+                    <p class="mt-1 text-sm font-normal text-stone-500">Mặc định lấy từ CLB, có thể sửa cho minigame này.</p>
+                </div>
+                <MinigameRulesFields :form="form" />
+            </section>
+
             <button class="flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-700 font-semibold text-white" :disabled="form.processing">Tạo</button>
         </form>
     </AppLayout>
