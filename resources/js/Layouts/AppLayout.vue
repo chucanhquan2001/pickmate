@@ -119,7 +119,7 @@ function goBack() {
             </div>
             <div class="flex shrink-0 items-center gap-1">
                 <Link href="/guide" class="rounded-full px-3 py-2 text-sm font-semibold text-teal-700">Hướng dẫn</Link>
-                <Link v-if="user?.can_manage" href="/manage" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Quản lý</Link>
+                <Link v-if="user?.can_manage" href="/manage" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Quản lý CLB</Link>
                 <Link href="/settings" class="rounded-full px-3 py-2 text-sm font-semibold text-stone-700">Cài đặt</Link>
                 <Link href="/logout" method="post" as="button" class="rounded-full bg-white px-3 py-2 text-sm font-semibold text-stone-700">Thoát</Link>
             </div>
